@@ -84,6 +84,9 @@ metadata {
             state "on", label: '${name}', action: "switch.off", icon: "st.switches.switch.on", backgroundColor: "#79b821"
             state "off", label: '${name}', action: "switch.on", icon: "st.switches.switch.off", backgroundColor: "#ffffff"
         }
+        valueTile("power", "device.power", decoration: "flat") {
+            state "default",  label: '${currentValue} W'
+        }
         valueTile("energy", "device.energy", decoration: "flat") {
             state "default", label:'${currentValue} kWh'
         }
