@@ -327,8 +327,8 @@ def configure() {
     0x14  1    0        LED status after power on: (0=last status, 1=always on, 2=always off)
     0x50  1    0        Enable to send notifications to associated devices in Group 1 when load changes (0=nothing, 1=hail CC, 2=basic CC report)
     0x5A  1    0        Enables/disables parameter 0x5B and 0x5C (0=disabled, 1=enabled)
-    0x5B  2    50       The value here represents minimum change in wattage for a REPORT to be sent (Valid values 0‐ 60000)
-    0x5C  1    10       Enables/disables parameter 0x5B and 0x5C (0=disabled, 1=enabled)
+    0x5B  2    50       The value here represents minimum change in wattage in terms of watts for a REPORT to be sent (Valid values 0‐ 60000)
+    0x5C  1    10       The value here represents minimum change in wattage percent for a REPORT to be sent
     0x64  1    N/A      Set 0x65-0x67 to default
     0x65  4    4        Which reports need to send in Report group 1
     0x66  4    8        Which reports need to send in Report group 2
