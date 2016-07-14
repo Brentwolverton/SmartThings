@@ -26,6 +26,10 @@
  *  Added option to disable polling
  *  2015-10-02: Version: 1.2.0
  *  Removed the code to set the icon since it crashed the app on the phone
+ *  2016-07-11: Version: 1.3.0
+ *  Switched to using contact book for notifications
+ *  2016-07-11: Version: 1.4.0
+ *  Added option to include the cycle duration
  *
  */
 
@@ -42,7 +46,7 @@ definition(
 preferences {
     section("About") {
         paragraph "Using power monitoring switch, monitor for a change in power consumption, and alert when the power draw stops."
-        paragraph "Version 1.2"
+        paragraph "Version 1.4"
     }
 
     section ("When this device stops drawing power") {
@@ -56,12 +60,15 @@ preferences {
 
     section ("Send this message") {
         input "message", "text", title: "Notification message", description: "Washer is done!", required: true
+        input "includeDuration", "boolean", title: "Include the duration in the message?", defaultValue: false
     }
 
-   section ("Notification method") {
+	section ("Notification method") {
         input "sendPushMessage", "boolean", title: "Send a push notification?", defaultValue: true
-        input "phone", "phone", title: "Send a text message to:", required: false
-    }
+        input("recipients", "contact", title: "Send notifications to") {
+            input "phone", "phone", title: "Notify with text message (optional)", description: "Phone Number", required: false
+        }
+ 	}
 
     section ("Additionally", hidden: hideOptionsSection(), hideable: true) {
         input "enablePolling", "boolean", title: "Enable polling?", defaultValue: false
@@ -153,15 +160,26 @@ def powerHandler(evt) {
     if (!state.cycleOn && currPower > upperThreshold) {
         state.cycleOn = true
         state.cycleStart = now()
+        state.cycleEnd = null
         log.trace "Cycle started."
     }
     // If the device stops drawing power, the cycle is complete, send notification.
     else if (state.cycleOn && currPower <= lowerThreshold) {
-        send(message)
         state.cycleOn = false
         state.cycleEnd = now()
         def duration = state.cycleEnd - state.cycleStart
-        log.trace "Cycle ended after ${duration} minutes."
+        log.trace "Cycle ended after ${duration} milliseconds."
+		if (includeDuration) {
+			def d = new Date(duration)
+			def h = d.getHours()
+			def m = d.getMinutes()
+			def s = d.getSeconds()
+			def msg = "${message} - Cycle ended after " + "$h:".padLeft(3,'0') + "$m:".padLeft(3,'0') + "${s}".padLeft(2,'0') + " (HH:MM:SS)"
+			send(msg)
+		}
+		else {
+			send(message)
+		}
     }
 }
 
@@ -175,9 +193,12 @@ private send(msg) {
         sendPush(msg)
     }
 
-    if (phone) {
-        sendSms(phone, msg)
+	if (location.contactBookEnabled && recipients) {
+    	sendNotificationToContacts(msg, recipients)
+    } else if (phone) { // check that the user did select a phone number
+    	sendSms(phone, msg)
     }
+    
     if (state.debug) {
         log.debug msg
     }
