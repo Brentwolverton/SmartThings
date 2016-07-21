@@ -101,6 +101,7 @@ def initialize() {
     state.cycleStart = null
     state.cycleEnd =  null
     state.debug = (debugOutput) ? debugOutput.toBoolean() : false
+	state.duration = (includeDuration) ? includeDuration.toBoolean() : false
 
     //Schedule the tickler to run on the defined interval
     def pollingInterval = (interval) ? interval : 5
@@ -169,7 +170,7 @@ def powerHandler(evt) {
         state.cycleEnd = now()
         def duration = state.cycleEnd - state.cycleStart
         log.trace "Cycle ended after ${duration} milliseconds."
-		if (includeDuration) {
+		if (state.duration) {
 			def d = new Date(duration)
 			def h = d.getHours()
 			def m = d.getMinutes()
