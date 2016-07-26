@@ -97,9 +97,8 @@ def updated() {
  */
 def initialize() {
     //Set the initial state
-    state.cycleOn = false
-    state.cycleStart = null
-    state.cycleEnd =  null
+    atomicState.cycleOn = false
+    atomicState.cycleStart = null
     state.debug = (debugOutput) ? debugOutput.toBoolean() : false
 	state.duration = (includeDuration) ? includeDuration.toBoolean() : false
 
@@ -158,17 +157,15 @@ def powerHandler(evt) {
     log.trace "Power: ${currPower}W"
 
 	//If cycle is not on and power exceeds upper threshold, start the cycle
-    if (!state.cycleOn && currPower > upperThreshold) {
-        state.cycleOn = true
-        state.cycleStart = now()
-        state.cycleEnd = null
+    if (!atomicState.cycleOn && currPower > upperThreshold) {
+        atomicState.cycleOn = true
+        atomicState.cycleStart = now()
         log.trace "Cycle started."
     }
     // If the device stops drawing power, the cycle is complete, send notification.
-    else if (state.cycleOn && currPower <= lowerThreshold) {
-        state.cycleOn = false
-        state.cycleEnd = now()
-        def duration = state.cycleEnd - state.cycleStart
+    else if (atomicState.cycleOn && currPower <= lowerThreshold) {
+        atomicState.cycleOn = false
+        def duration = now() - atomicState.cycleStart
         log.trace "Cycle ended after ${duration} milliseconds."
 		if (state.duration) {
 			def d = new Date(duration)
