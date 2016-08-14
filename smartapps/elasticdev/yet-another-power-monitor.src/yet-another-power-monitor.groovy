@@ -30,6 +30,8 @@
  *  Switched to using contact book for notifications
  *  2016-07-11: Version: 1.4.0
  *  Added option to include the cycle duration
+ *  2016-08-14: Version: 1.5.0
+ *  Eliminated duplicate notifications
  *
  */
 
@@ -46,7 +48,7 @@ definition(
 preferences {
     section("About") {
         paragraph "Using power monitoring switch, monitor for a change in power consumption, and alert when the power draw stops."
-        paragraph "Version 1.4"
+        paragraph "Version 1.5"
     }
 
     section ("When this device stops drawing power") {
@@ -97,8 +99,7 @@ def updated() {
  */
 def initialize() {
     //Set the initial state
-    atomicState.cycleOn = false
-    atomicState.cycleStart = null
+    state.cycleStart = null
     state.debug = (debugOutput) ? debugOutput.toBoolean() : false
 	state.duration = (includeDuration) ? includeDuration.toBoolean() : false
 
@@ -157,15 +158,14 @@ def powerHandler(evt) {
     log.trace "Power: ${currPower}W"
 
 	//If cycle is not on and power exceeds upper threshold, start the cycle
-    if (!atomicState.cycleOn && currPower > upperThreshold) {
-        atomicState.cycleOn = true
+    if ((currPower > upperThreshold) && !atomicState.cycleStart) {
         atomicState.cycleStart = now()
         log.trace "Cycle started."
     }
     // If the device stops drawing power, the cycle is complete, send notification.
-    else if (atomicState.cycleOn && currPower <= lowerThreshold) {
-        atomicState.cycleOn = false
-        def duration = now() - atomicState.cycleStart
+    else if ((currPower <= lowerThreshold) && atomicState.cycleStart) {
+        def duration = now() - state.cycleStart
+        atomicState.cycleStart = null
         log.trace "Cycle ended after ${duration} milliseconds."
 		if (state.duration) {
 			def d = new Date(duration)
