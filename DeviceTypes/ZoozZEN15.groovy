@@ -77,7 +77,6 @@ metadata {
 		configParams?.each {			
 			getOptionsInput(it)
 		}
-		
 		input "energyPrice", "decimal",
 			title: "\$/kWh Cost:",
 			defaultValue: energyPriceSetting,
